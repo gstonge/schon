@@ -35,20 +35,20 @@ namespace schon
 ComplexSIS::ComplexSIS(const EdgeList& edge_list,
         const function<double(size_t,size_t)>& recovery_rate,
         const function<double(size_t,size_t)>& infection_rate,
-        const pair<double>& group_rate_bounds):
+        const pair<double,double>& group_rate_bounds):
     current_time_(0), last_event_time_(0), time_since_last_measure_(0),
     gen_(sset::BaseSamplableSet::gen_), random_01_(),
     recovery_rate_(recovery_rate), infection_rate_(infection_rate),
     network_(edge_list), node_state_vector_(network_.size(), S),
     group_state_vector_(network_.number_of_groups()),
     group_state_position_vector_(network_.number_of_groups()),
-    infected_node_set(),
-    event_set(group_rate_bounds.first,group_rate_bounds.second)
+    infected_node_set_(),
+    event_set_(group_rate_bounds.first,group_rate_bounds.second)
 {
     //initialize group state vector and position
     for (Group group : network_.groups())
     {
-        for (NodeState state = 0; state < STATECOUNT; state++)
+        for (unsigned int state = S; state < STATECOUNT; state++)
         {
             group_state_vector_[group].push_back(vector<Node>());
         }
@@ -64,15 +64,16 @@ ComplexSIS::ComplexSIS(const EdgeList& edge_list,
 //infect a node
 inline void ComplexSIS::infect(Node node)
 {
-    NodeState previous_state = state_vector_[node];
-    state_vector_[node] = I;
+    NodeState previous_state = node_state_vector_[node];
+    node_state_vector_[node] = I;
     infected_node_set_.insert(node);
     for (Group group : network_.adjacent_groups(node))
     {
         //update group state and group state position of node
         GroupState & group_state = group_state_vector_[group];
         size_t position = group_state_position_vector_[group][node];
-        swap(group_state[previous_state][position],group_state.back());
+        swap(group_state[previous_state][position],
+                group_state[previous_state].back());
         group_state[previous_state].pop_back();
         group_state_position_vector_[group][node] = group_state[I].size();
         group_state[I].push_back(node);
@@ -81,11 +82,11 @@ inline void ComplexSIS::infect(Node node)
             get_infection_rate(group);
         if (new_rate > 0)
         {
-            event_set.set_weight(group,new_rate);
+            event_set_.set_weight(group,new_rate);
         }
         else
         {
-            event_set.erase(group);
+            event_set_.erase(group);
         }
     }
 }
@@ -93,15 +94,16 @@ inline void ComplexSIS::infect(Node node)
 //recover a node
 inline void ComplexSIS::recover(Node node)
 {
-    NodeState previous_state = state_vector_[node];
-    state_vector_[node] = S;
+    NodeState previous_state = node_state_vector_[node];
+    node_state_vector_[node] = S;
     infected_node_set_.erase(node);
     for (Group group : network_.adjacent_groups(node))
     {
         //update group state and group state position of node
         GroupState & group_state = group_state_vector_[group];
         size_t position = group_state_position_vector_[group][node];
-        swap(group_state[previous_state][position],group_state.back());
+        swap(group_state[previous_state][position],
+                group_state[previous_state].back());
         group_state[previous_state].pop_back();
         group_state_position_vector_[group][node] = group_state[S].size();
         group_state[S].push_back(node);
@@ -110,11 +112,11 @@ inline void ComplexSIS::recover(Node node)
             get_infection_rate(group);
         if (new_rate > 0)
         {
-            event_set.set_weight(group,new_rate);
+            event_set_.set_weight(group,new_rate);
         }
         else
         {
-            event_set.erase(group);
+            event_set_.erase(group);
         }
     }
 }
@@ -128,7 +130,7 @@ void ComplexSIS::infect_fraction(double fraction)
 	while (count < number_of_infection)
 	{
 		node = floor(random_01_(gen_)*network_.size());
-		if (state_vector_[node] == S)
+		if (node_state_vector_[node] == S)
 		{
 			infect(node);
             count += 1;
@@ -139,7 +141,7 @@ void ComplexSIS::infect_fraction(double fraction)
 //get a random node of the particular state in the group
 Node ComplexSIS::random_node(Group group, NodeState node_state) const
 {
-    GroupState& group_state = group_state_vector_[group];
+    const GroupState& group_state = group_state_vector_[group];
     unsigned int index = floor(random_01_(gen_)*group_state[node_state].size());
     return group_state[node_state][index];
 }
@@ -151,7 +153,7 @@ void ComplexSIS::next_event()
 {
     current_time_ = last_event_time_ + get_lifetime();
     //select a group proportionally to its weight
-    pair<Group, double> group_weight_pair = (event_set.sample()).value();
+    pair<Group, double> group_weight_pair = (event_set_.sample()).value();
     const Group& group= group_weight_pair.first;
     if(random_01_(gen_) < get_recovery_rate(group)/group_weight_pair.second)
     {
@@ -215,9 +217,9 @@ void ComplexSIS::clear()
 {
     for (Node node : infected_node_set_)
     {
-        recover(node)
+        recover(node);
     }
-    event_set.clear();
+    event_set_.clear();
 }
 
 //clear and reset the process to initial state at time 0

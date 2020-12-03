@@ -49,9 +49,7 @@ class BaseSamplableSet
 {
     public:
         static void seed(unsigned int seed_value);
-    protected:
         static RNGType gen_;
-        friend class ContagionProcess;
 };
 
 

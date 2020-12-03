@@ -25,8 +25,9 @@
 #ifndef COMPLEXSIS_HPP_
 #define COMPLEXSIS_HPP_
 
-#include "SamplableSet/SamplableSet.hpp"
+#include <SamplableSet.hpp>
 #include "MeasurableContagionProcess.hpp"
+#include <functional>
 
 namespace schon
 {//start of namespace schon
@@ -40,7 +41,7 @@ public:
     ComplexSIS(const EdgeList& edge_list,
             const std::function<double(std::size_t,std::size_t)>& recovery_rate,
             const std::function<double(std::size_t,std::size_t)>& infection_rate,
-            const std::pair<double>& group_rate_bounds);
+            const std::pair<double,double>& group_rate_bounds);
 
     //Accessors
     std::size_t size() const
@@ -54,9 +55,9 @@ public:
     double get_current_time() const
         {return current_time_;}
     double get_lifetime() const
-        {return event_set.size() == 0 ?
+        {return event_set_.size() == 0 ?
             std::numeric_limits<double>::infinity() :
-            1/event_set.total_weight();}
+            1/event_set_.total_weight();}
     std::size_t get_number_of_infected_nodes() const
         {return infected_node_set_.size();}
 
@@ -69,6 +70,7 @@ public:
 
     //Mutators
     void seed(unsigned int seed)
+        {gen_.seed(seed);}
     void infect_fraction(double fraction);
     void next_event();
     void evolve(double period);
@@ -80,7 +82,7 @@ protected:
     double current_time_;
     double last_event_time_;
     double time_since_last_measure_;
-    mutable RNGType &gen_;
+    sset::RNGType &gen_;
     mutable std::uniform_real_distribution<double> random_01_;
 
 private:
@@ -92,7 +94,7 @@ private:
     std::vector<GroupState> group_state_vector_;
     std::vector<GroupStatePosition> group_state_position_vector_;
     std::unordered_set<Node> infected_node_set_;
-    sset::SamplableSet<Group> event_set;
+    sset::SamplableSet<Group> event_set_;
 
     //utility functions
     inline void infect(Node node);

@@ -29,13 +29,13 @@
 #include "BipartiteNetwork.hpp"
 #include <unordered_set>
 #include <unordered_map>
-#include "utility.hpp"
+#include <utility>
 
 namespace schon
 {//start of namespace schon
 
 enum NodeState {S, I, Count};
-const unsigned int STATECOUNT = static_cast<unsigned int>(NodeState::Count)
+const unsigned int STATECOUNT = static_cast<unsigned int>(NodeState::Count);
 
 typedef std::vector<std::vector<Node>> GroupState; //NodeState is entry
 typedef std::unordered_map<Node,std::size_t> GroupStatePosition;
