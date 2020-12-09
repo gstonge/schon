@@ -9,7 +9,7 @@ int main(int argc, const char *argv[])
     //make one big group
     int n = 1000;
     double scale_rec = 1.;
-    double scale_inf = 0.00101;
+    double scale_inf = 0.001;
     double shape_inf = 1.;
     double fraction = 0.5;
     EdgeList edge_list;
@@ -26,13 +26,13 @@ int main(int argc, const char *argv[])
 
     //infect a fraction of the nodes
     cont.infect_fraction(fraction);
+    cont.initialize_history();
 
     //make it evolve for a time, then evolve and measure
-    double dt1 = 100.;
+    double dt1 = 200.;
     double dt2 = 20.;
-    double decorrlation_dt = 1.;
-    cont.evolve(dt1);
-    cont.evolve_and_measure(dt2,decorrlation_dt);
+    cont.evolve(dt1,0.5,false,true);
+    cont.evolve(dt2,1.,true,true);
     vector<shared_ptr<Measure>> measure_vector = cont.get_measure_vector();
     shared_ptr<Prevalence> prevalence_ptr = dynamic_pointer_cast<Prevalence>(
             measure_vector[0]);

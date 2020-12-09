@@ -45,7 +45,8 @@ ComplexSIS::ComplexSIS(const EdgeList& edge_list,
     group_state_vector_(network_.number_of_groups()),
     group_state_position_vector_(network_.number_of_groups()),
     infected_node_set_(),
-    event_set_(group_rate_bounds.first,group_rate_bounds.second)
+    event_set_(group_rate_bounds.first,group_rate_bounds.second),
+    history_vector_()
 {
     //initialize group state vector and position
     for (Group group : network_.groups())
@@ -180,20 +181,82 @@ void ComplexSIS::next_event()
     last_event_time_ = current_time_;
 }
 
-//perform the evolution of the process over a period of time
-void ComplexSIS::evolve(double period)
-{
-    double initial_time = current_time_;
-    while(last_event_time_ + get_lifetime() - initial_time < period)
-    {
-        next_event();
-    }
-    current_time_ = initial_time + period;
-}
+////perform the evolution of the process over a period of time
+//void ComplexSIS::evolve(double period)
+//{
+    //double initial_time = current_time_;
+    //while(last_event_time_ + get_lifetime() - initial_time < period)
+    //{
+        //next_event();
+    //}
+    //current_time_ = initial_time + period;
+//}
+
+////perform the evolution of the process over a period of time and perform
+////measures after each decorrelation time
+//void ComplexSIS::evolve(double period, bool measure, double decorrelation_time)
+//{
+    //double initial_time = current_time_;
+    //while(last_event_time_ + get_lifetime() - initial_time < period)
+    //{
+        //time_since_last_measure_ += last_event_time_
+            //+ get_lifetime() - current_time_; //after the coming event
+        //if ((time_since_last_measure_ > decorrelation_time) and measure)
+        //{
+            //time_since_last_measure_ -= decorrelation_time;
+            //for(size_t i = 0; i < measure_vector_.size(); i++)
+            //{
+                //measure_vector_[i] -> measure(this);
+            //}
+        //}
+        //next_event();
+    //}
+    //time_since_last_measure_ += period - (last_event_time_ - initial_time);
+    ////if we need to perform a last measure
+    //if ((time_since_last_measure_ > decorrelation_time) and measure)
+    //{
+        //for(size_t i = 0; i < measure_vector_.size(); i++)
+        //{
+            //measure_vector_[i] -> measure(this);
+        //}
+    //}
+    //current_time_ = initial_time + period;
+//}
+
+////perform the evolution of the process over a period of time
+//void ComplexSIS::qs_evolve(double period, double decorrelation_time)
+//{
+    //double initial_time = current_time_;
+    //while(last_event_time_ + get_lifetime() - initial_time < period)
+    //{
+        //time_since_last_measure_ += last_event_time_
+            //+ get_lifetime() - current_time_; //after the coming event
+
+        //if (time_since_last_measure_ > decorrelation_time)
+        //{
+            //time_since_last_measure_ -= decorrelation_time;
+            //store_configuration();
+        //}
+        //next_event();
+        //if (isinf(get_lifetime()))
+        //{
+            //get_configuration_from_history();
+        //}
+
+    //}
+    //time_since_last_measure_ += period - (last_event_time_ - initial_time);
+    ////if we need to perform a last measure
+    //if (time_since_last_measure_ > decorrelation_time)
+    //{
+        //store_configuration();
+    //}
+    //current_time_ = initial_time + period;
+//}
 
 //perform the evolution of the process over a period of time and perform
-//measures after each decorrelation time
-void ComplexSIS::evolve_and_measure(double period, double decorrelation_time)
+//measures after each decorrelation time if needed
+void ComplexSIS::evolve(double period, double decorrelation_time, bool measure,
+        bool quasistationary)
 {
     double initial_time = current_time_;
     while(last_event_time_ + get_lifetime() - initial_time < period)
@@ -203,20 +266,39 @@ void ComplexSIS::evolve_and_measure(double period, double decorrelation_time)
         if (time_since_last_measure_ > decorrelation_time)
         {
             time_since_last_measure_ -= decorrelation_time;
-            for(size_t i = 0; i < measure_vector_.size(); i++)
+            if (measure)
             {
-                measure_vector_[i] -> measure(this);
+                for(size_t i = 0; i < measure_vector_.size(); i++)
+                {
+                    measure_vector_[i] -> measure(this);
+                }
+            }
+            if (quasistationary)
+            {
+                store_configuration();
             }
         }
         next_event();
+        if (isinf(get_lifetime()) and quasistationary)
+        {
+            get_configuration_from_history();
+        }
     }
     time_since_last_measure_ += period - (last_event_time_ - initial_time);
     //if we need to perform a last measure
     if (time_since_last_measure_ > decorrelation_time)
     {
-        for(size_t i = 0; i < measure_vector_.size(); i++)
+        time_since_last_measure_ -= decorrelation_time;
+        if (measure)
         {
-            measure_vector_[i] -> measure(this);
+            for(size_t i = 0; i < measure_vector_.size(); i++)
+            {
+                measure_vector_[i] -> measure(this);
+            }
+        }
+        if (quasistationary)
+        {
+            store_configuration();
         }
     }
     current_time_ = initial_time + period;
@@ -232,31 +314,35 @@ void ComplexSIS::clear()
     event_set_.clear();
 }
 
-//clear and reset the process to initial state at time 0
+//clear and reset the process to initial state at time 0 (and clear history)
 void ComplexSIS::reset()
 {
     clear();
+    history_vector_.clear();
     current_time_ = 0;
     last_event_time_ = 0;
     time_since_last_measure_ = 0;
 }
 
-////set the state of the process using an SIS configuration--keep current time
-//void ComplexSIS::set_configuration(
-        //const SIS_configuration& configuration)
-//{
-    //clear();
-    ////time shift between current configuration and the one in argument
-    //double time_shift = current_time_ - configuration.get_current_time();
-    //const unordered_set<Node>& infected_node_set =
-        //configuration.get_infected_node_set();
-    //const unordered_map<Node,double>& time_of_infection_map =
-        //configuration.get_time_of_infection_map();
-    //for (auto iter = infected_node_set.begin();
-            //iter != infected_node_set.end(); iter ++)
-    //{
-        //delayed_infect(*iter, time_shift + time_of_infection_map.at(*iter));
-    //}
-//}
+void ComplexSIS::store_configuration()
+{
+    //delete randomly one configuration before
+    size_t index = floor(random_01_(gen_)*history_vector_.size());
+    swap(history_vector_[index], history_vector_.back());
+    history_vector_.pop_back();
+    history_vector_.push_back(infected_node_set_);
+}
+
+void ComplexSIS::get_configuration_from_history()
+{
+    clear();
+    size_t index = floor(random_01_(gen_)*history_vector_.size());
+    const std::unordered_set<Node>& infected_node_set = history_vector_[index];
+    for (Node node : infected_node_set)
+    {
+        infect(node);
+    }
+}
+
 
 }//end of namespace schon

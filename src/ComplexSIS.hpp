@@ -72,11 +72,19 @@ public:
     void seed(unsigned int seed)
         {gen_.seed(seed);}
     void infect_fraction(double fraction);
+
     void next_event();
-    void evolve(double period);
-    void evolve_and_measure(double period, double decorrelation_time);
+    void evolve(double period, double decorrelation_time=1, bool measure=false,
+            bool quasistationary=false);
+
     void clear();
     void reset();
+    void initialize_history(std::size_t number_of_states = 100)
+    {
+        //must be non trivial
+        history_vector_ = std::vector<std::unordered_set<Node>>(number_of_states,
+                infected_node_set_);
+    }
 
 protected:
     double current_time_;
@@ -95,6 +103,7 @@ private:
     std::vector<GroupStatePosition> group_state_position_vector_;
     std::unordered_set<Node> infected_node_set_;
     sset::SamplableSet<Group> event_set_;
+    std::vector<std::unordered_set<Node>> history_vector_;
 
     //utility functions
     inline void update_group_rate(Group group, Node node,
@@ -102,6 +111,10 @@ private:
     inline void infect(Node node);
     inline void recover(Node node);
     inline Node random_node(Group group, NodeState node_state) const;
+
+    void store_configuration();
+    void get_configuration_from_history();
+
 };
 
 }//end of namespace schon
