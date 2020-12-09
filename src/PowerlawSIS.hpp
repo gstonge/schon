@@ -22,47 +22,38 @@
  * SOFTWARE.
  */
 
-#include "MarginalInfectionProbability.hpp"
+#ifndef POWERLAWSIS
+#define POWERLAWSIS
 
-using namespace std;
+#include "ComplexSIS.hpp"
 
 namespace schon
 {//start of namespace schon
 
-//constructor
-MarginalInfectionProbability::MarginalInfectionProbability(
-        size_t network_size): weight_vector_(network_size, 0.),
-    count_(0), name_("marginal_infection_probability")
+//class to simulate SIS process on networks
+class PowerlawSIS : public ComplexSIS
 {
-}
+public:
+    //Constructor
+    PowerlawSIS(const EdgeList& edge_list, double scale_recovery,
+            double scale_infection, double shape_infection,
+            const std::pair<double,double>& group_rate_bounds);
+};
 
-//return the marginal probability of infection for each node
-vector<double> MarginalInfectionProbability::get_result() const
+//constructor definiton
+PowerlawSIS::PowerlawSIS(const EdgeList& edge_list, double scale_recovery,
+            double scale_infection, double shape_infection,
+            const std::pair<double,double>& group_rate_bounds) : ComplexSIS(
+                edge_list, NULL, NULL, group_rate_bounds)
 {
-    vector<double> marginal_vector(weight_vector_);
-    if (count_ > 0)
-    {
-        for (auto iter = marginal_vector.begin();
-                iter != marginal_vector.end(); iter++)
-        {
-            *iter /= count_;
-        }
-    }
-    return marginal_vector;
-}
-
-//perform a measure on the contagion process
-void MarginalInfectionProbability::measure(
-        ContagionProcess const * const ptr)
-{
-    const unordered_set<Node>& infected_node_set =
-        ptr->get_infected_node_set();
-    //iterate on infected nodes
-    for (const auto& node : infected_node_set)
-    {
-        weight_vector_[node] += 1;
-    }
-    count_ += 1;
+    //define the recovery/infection rates
+    recovery_rate_ = [=](std::size_t n,std::size_t i) -> double
+        {return scale_recovery*i;};
+    infection_rate_ = [=](std::size_t n,std::size_t i) -> double
+        {return scale_infection*(n-i)*pow(i,shape_infection);};
 }
 
 }//end of namespace schon
+
+#endif /* POWERLAWSIS */
+

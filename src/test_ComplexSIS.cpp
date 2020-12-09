@@ -1,4 +1,4 @@
-#include "ComplexSIS.hpp"
+#include "PowerlawSIS.hpp"
 #include <iostream>
 
 using namespace std;
@@ -6,11 +6,39 @@ using namespace schon;
 
 int main(int argc, const char *argv[])
 {
+    //make one big group
+    int n = 1000;
+    double scale_rec = 1.;
+    double scale_inf = 0.00101;
+    double shape_inf = 1.;
+    double fraction = 0.5;
     EdgeList edge_list;
-    edge_list.push_back(make_pair(0,0));
-    edge_list.push_back(make_pair(0,1));
-    edge_list.push_back(make_pair(1,1));
-    edge_list.push_back(make_pair(0,2));
+    for( int j = 0; j < n; j++)
+    {
+        edge_list.push_back(make_pair(j,0));
+    }
+    PowerlawSIS cont(edge_list,scale_rec,scale_inf,shape_inf,
+            make_pair(1.,scale_inf*(n*n/4)+n*scale_rec));
+
+    //measure prevalence and marginal infection prob
+    cont.measure_prevalence();
+    cont.measure_marginal_infection_probability();
+
+    //infect a fraction of the nodes
+    cont.infect_fraction(fraction);
+
+    //make it evolve for a time, then evolve and measure
+    double dt1 = 100.;
+    double dt2 = 20.;
+    double decorrlation_dt = 1.;
+    cont.evolve(dt1);
+    cont.evolve_and_measure(dt2,decorrlation_dt);
+    vector<shared_ptr<Measure>> measure_vector = cont.get_measure_vector();
+    shared_ptr<Prevalence> prevalence_ptr = dynamic_pointer_cast<Prevalence>(
+            measure_vector[0]);
+    double prevalence = prevalence_ptr-> get_result();
+    cout << prevalence << endl;
+
 
     return 0;
 }

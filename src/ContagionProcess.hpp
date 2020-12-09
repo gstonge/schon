@@ -52,6 +52,7 @@ public:
     virtual std::size_t get_number_of_infected_nodes() const = 0;
     virtual const std::unordered_set<Node>& get_infected_node_set(
             ) const = 0;
+    virtual const BipartiteNetwork& get_network() const = 0;
     virtual double get_lifetime() const = 0;
 };
 

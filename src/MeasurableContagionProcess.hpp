@@ -28,7 +28,8 @@
 #include <memory>
 #include "ContagionProcess.hpp"
 #include "Measure.hpp"
-//#include "MarginalInfectionProbability.hpp"
+#include "MarginalInfectionProbability.hpp"
+#include "Prevalence.hpp"
 
 namespace schon
 {//start of namespace schon
@@ -44,14 +45,19 @@ public:
     const std::vector<std::shared_ptr<Measure>>& get_measure_vector() const
         {return measure_vector_;}
 
+
     //Mutators
-    void add_measure(std::shared_ptr<Measure> ptr)
-        {measure_vector_.push_back(ptr);}
-    //void measure_marginal_infection_probability()
-        //{add_measure(std::make_shared<MarginalInfectionProbability>(
-                    //get_network().size()));}
+    void measure_marginal_infection_probability()
+        {add_measure(std::make_shared<MarginalInfectionProbability>(
+                    get_network().size()));}
+
+    void measure_prevalence()
+        {add_measure(std::make_shared<Prevalence>(
+                    get_network().size()));}
 
 protected:
+    void add_measure(std::shared_ptr<Measure> ptr)
+        {measure_vector_.push_back(ptr);}
     //Members
     std::vector<std::shared_ptr<Measure>> measure_vector_;
 };

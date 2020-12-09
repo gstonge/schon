@@ -84,11 +84,11 @@ protected:
     double time_since_last_measure_;
     sset::RNGType &gen_;
     mutable std::uniform_real_distribution<double> random_01_;
+    std::function<double(std::size_t,std::size_t)> recovery_rate_;
+    std::function<double(std::size_t,std::size_t)> infection_rate_;
 
 private:
     //Members
-    std::function<double(std::size_t,std::size_t)> recovery_rate_;
-    std::function<double(std::size_t,std::size_t)> infection_rate_;
     BipartiteNetwork network_;
     std::vector<NodeState> node_state_vector_;
     std::vector<GroupState> group_state_vector_;
@@ -97,6 +97,8 @@ private:
     sset::SamplableSet<Group> event_set_;
 
     //utility functions
+    inline void update_group_rate(Group group, Node node,
+            NodeState previous_state, NodeState new_state);
     inline void infect(Node node);
     inline void recover(Node node);
     inline Node random_node(Group group, NodeState node_state) const;

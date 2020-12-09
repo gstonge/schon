@@ -46,7 +46,7 @@ public:
 
 private:
     //Members
-    std::string name_;
+    const std::string name_;
     int count_;
     std::vector<double> weight_vector_;
 };

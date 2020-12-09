@@ -22,47 +22,36 @@
  * SOFTWARE.
  */
 
-#include "MarginalInfectionProbability.hpp"
+#ifndef PREVALENCE_HPP_
+#define PREVALENCE_HPP_
 
-using namespace std;
+#include "Measure.hpp"
 
 namespace schon
 {//start of namespace schon
 
-//constructor
-MarginalInfectionProbability::MarginalInfectionProbability(
-        size_t network_size): weight_vector_(network_size, 0.),
-    count_(0), name_("marginal_infection_probability")
+class Prevalence : public Measure
 {
-}
+public:
+    //Constructor
+    Prevalence(std::size_t network_size);
 
-//return the marginal probability of infection for each node
-vector<double> MarginalInfectionProbability::get_result() const
-{
-    vector<double> marginal_vector(weight_vector_);
-    if (count_ > 0)
-    {
-        for (auto iter = marginal_vector.begin();
-                iter != marginal_vector.end(); iter++)
-        {
-            *iter /= count_;
-        }
-    }
-    return marginal_vector;
-}
+    //Acessors
+    double get_result() const;
+    const std::string& get_name() const
+        {return name_;}
 
-//perform a measure on the contagion process
-void MarginalInfectionProbability::measure(
-        ContagionProcess const * const ptr)
-{
-    const unordered_set<Node>& infected_node_set =
-        ptr->get_infected_node_set();
-    //iterate on infected nodes
-    for (const auto& node : infected_node_set)
-    {
-        weight_vector_[node] += 1;
-    }
-    count_ += 1;
-}
+    //Mutators
+    void measure(ContagionProcess const * const ptr);
+
+private:
+    //Members
+    const std::string name_;
+    const std::size_t network_size_;
+    int count_;
+    double weight_;
+};
 
 }//end of namespace schon
+
+#endif /* PREVALENCE_HPP_ */

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include "MarginalInfectionProbability.hpp"
+#include "Prevalence.hpp"
 
 using namespace std;
 
@@ -30,38 +30,22 @@ namespace schon
 {//start of namespace schon
 
 //constructor
-MarginalInfectionProbability::MarginalInfectionProbability(
-        size_t network_size): weight_vector_(network_size, 0.),
-    count_(0), name_("marginal_infection_probability")
+Prevalence::Prevalence(size_t network_size): network_size_(network_size),
+    count_(0), name_("prevalence")
 {
 }
 
-//return the marginal probability of infection for each node
-vector<double> MarginalInfectionProbability::get_result() const
+//return the prevalence
+double Prevalence::get_result() const
 {
-    vector<double> marginal_vector(weight_vector_);
-    if (count_ > 0)
-    {
-        for (auto iter = marginal_vector.begin();
-                iter != marginal_vector.end(); iter++)
-        {
-            *iter /= count_;
-        }
-    }
-    return marginal_vector;
+    return weight_/(count_*network_size_);
 }
 
 //perform a measure on the contagion process
-void MarginalInfectionProbability::measure(
+void Prevalence::measure(
         ContagionProcess const * const ptr)
 {
-    const unordered_set<Node>& infected_node_set =
-        ptr->get_infected_node_set();
-    //iterate on infected nodes
-    for (const auto& node : infected_node_set)
-    {
-        weight_vector_[node] += 1;
-    }
+    weight_ += ptr->get_number_of_infected_nodes();
     count_ += 1;
 }
 

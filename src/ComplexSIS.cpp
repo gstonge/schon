@@ -25,6 +25,8 @@
 #include "ComplexSIS.hpp"
 #include <optional>
 #include <utility>
+#include <iostream>
+#include <exception>
 
 using namespace std;
 
@@ -61,85 +63,93 @@ ComplexSIS::ComplexSIS(const EdgeList& edge_list,
     }
 }
 
+//update the event group rate
+inline void ComplexSIS::update_group_rate(Group group, Node node,
+        NodeState previous_state, NodeState new_state)
+{
+    GroupState & group_state = group_state_vector_[group];
+    size_t position = group_state_position_vector_[group][node];
+    if (position < group_state[previous_state].size())
+    {
+        //node not in the back, put node in the back position
+        swap(group_state[previous_state][position],
+                group_state[previous_state].back());
+        //also update the position of the node in the back
+        Node back_node = group_state[previous_state][position];
+        group_state_position_vector_[group][back_node] = position;
+    }
+    //put node in new group state
+    group_state[previous_state].pop_back();
+    group_state_position_vector_[group][node] = group_state[new_state].size();
+    group_state[new_state].push_back(node);
+    //update event set with new rate
+    double new_rate = get_recovery_rate(group) +
+        get_infection_rate(group);
+    if (new_rate > 0)
+    {
+        event_set_.set_weight(group,new_rate);
+    }
+    else
+    {
+        event_set_.erase(group);
+    }
+}
+
 //infect a node
 inline void ComplexSIS::infect(Node node)
 {
-    NodeState previous_state = node_state_vector_[node];
-    node_state_vector_[node] = I;
-    infected_node_set_.insert(node);
-    for (Group group : network_.adjacent_groups(node))
+    if (node_state_vector_[node] == S)
     {
-        //update group state and group state position of node
-        GroupState & group_state = group_state_vector_[group];
-        size_t position = group_state_position_vector_[group][node];
-        swap(group_state[previous_state][position],
-                group_state[previous_state].back());
-        group_state[previous_state].pop_back();
-        group_state_position_vector_[group][node] = group_state[I].size();
-        group_state[I].push_back(node);
-        //update event set
-        double new_rate = get_recovery_rate(group) +
-            get_infection_rate(group);
-        if (new_rate > 0)
+        node_state_vector_[node] = I;
+        infected_node_set_.insert(node);
+        for (Group group : network_.adjacent_groups(node))
         {
-            event_set_.set_weight(group,new_rate);
+            update_group_rate(group,node,S,I);
         }
-        else
-        {
-            event_set_.erase(group);
-        }
+    }
+    else
+    {
+        throw runtime_error("Infection attempt: the node is not susceptible");
     }
 }
 
 //recover a node
 inline void ComplexSIS::recover(Node node)
 {
-    NodeState previous_state = node_state_vector_[node];
-    node_state_vector_[node] = S;
-    infected_node_set_.erase(node);
-    for (Group group : network_.adjacent_groups(node))
+    if (node_state_vector_[node] == I)
     {
-        //update group state and group state position of node
-        GroupState & group_state = group_state_vector_[group];
-        size_t position = group_state_position_vector_[group][node];
-        swap(group_state[previous_state][position],
-                group_state[previous_state].back());
-        group_state[previous_state].pop_back();
-        group_state_position_vector_[group][node] = group_state[S].size();
-        group_state[S].push_back(node);
-        //update event set
-        double new_rate = get_recovery_rate(group) +
-            get_infection_rate(group);
-        if (new_rate > 0)
+        node_state_vector_[node] = S;
+        infected_node_set_.erase(node);
+        for (Group group : network_.adjacent_groups(node))
         {
-            event_set_.set_weight(group,new_rate);
+            update_group_rate(group,node,I,S);
         }
-        else
-        {
-            event_set_.erase(group);
-        }
+    }
+    else
+    {
+        throw runtime_error("Recovery attempt: the node is not infected");
     }
 }
 
 //infect a fraction of the nodes
 void ComplexSIS::infect_fraction(double fraction)
 {
-	unsigned int number_of_infection = floor(network_.size()*fraction);
-	Node node;
+    unsigned int number_of_infection = floor(network_.size()*fraction);
+    Node node;
     unsigned int count = 0;
-	while (count < number_of_infection)
-	{
-		node = floor(random_01_(gen_)*network_.size());
-		if (node_state_vector_[node] == S)
-		{
-			infect(node);
+    while (count < number_of_infection)
+    {
+        node = floor(random_01_(gen_)*network_.size());
+        if (node_state_vector_[node] == S)
+        {
+            infect(node);
             count += 1;
-		}
-	}
+        }
+    }
 }
 
 //get a random node of the particular state in the group
-Node ComplexSIS::random_node(Group group, NodeState node_state) const
+inline Node ComplexSIS::random_node(Group group, NodeState node_state) const
 {
     const GroupState& group_state = group_state_vector_[group];
     unsigned int index = floor(random_01_(gen_)*group_state[node_state].size());
