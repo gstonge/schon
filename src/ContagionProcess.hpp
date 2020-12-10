@@ -29,13 +29,20 @@
 #include "BipartiteNetwork.hpp"
 #include <unordered_set>
 #include <unordered_map>
+#include <tuple>
 #include <utility>
+#include "SamplableSet/hash_specialization.hpp"
 
 namespace schon
 {//start of namespace schon
 
-enum NodeState {S, I, Count};
-const unsigned int STATECOUNT = static_cast<unsigned int>(NodeState::Count);
+enum NodeState {S, I, COUNT};
+const unsigned int STATECOUNT = static_cast<unsigned int>(NodeState::COUNT);
+enum Action {RECOVERY,INFECTION};
+enum Actor {GROUP,NODE};
+
+typedef unsigned int Label;
+typedef std::tuple<Actor,Action,Label> Event;
 
 typedef std::vector<std::vector<Node>> GroupState; //NodeState is entry
 typedef std::unordered_map<Node,std::size_t> GroupStatePosition;

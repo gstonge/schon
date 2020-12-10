@@ -22,10 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef COMPLEXSIS_HPP_
-#define COMPLEXSIS_HPP_
+#ifndef GROUPSIS_HPP_
+#define GROUPSIS_HPP_
 
-#include <SamplableSet.hpp>
+#include "SamplableSet/SamplableSet.hpp"
 #include "MeasurableContagionProcess.hpp"
 #include <functional>
 
@@ -34,14 +34,13 @@ namespace schon
 
 
 //class to simulate SIS process on networks
-class ComplexSIS : public MeasurableContagionProcess
+class GroupSIS : public MeasurableContagionProcess
 {
 public:
     //Constructor
-    ComplexSIS(const EdgeList& edge_list,
-            const std::function<double(std::size_t,std::size_t)>& recovery_rate,
+    GroupSIS(const EdgeList& edge_list, double recovery_rate,
             const std::function<double(std::size_t,std::size_t)>& infection_rate,
-            const std::pair<double,double>& group_rate_bounds);
+            const std::pair<double,double>& rate_bounds);
 
     //Accessors
     std::size_t size() const
@@ -61,13 +60,6 @@ public:
     std::size_t get_number_of_infected_nodes() const
         {return infected_node_set_.size();}
 
-    double get_recovery_rate(Group group) const
-        {return recovery_rate_(network_.group_size(group),
-                group_state_vector_[group][I].size());}
-    double get_infection_rate(Group group) const
-        {return infection_rate_(network_.group_size(group),
-                group_state_vector_[group][I].size());}
-
     //Mutators
     void seed(unsigned int seed)
         {gen_.seed(seed);}
@@ -79,12 +71,7 @@ public:
 
     void clear();
     void reset();
-    void initialize_history(std::size_t number_of_states = 100)
-    {
-        //must be non trivial
-        history_vector_ = std::vector<std::unordered_set<Node>>(number_of_states,
-                infected_node_set_);
-    }
+    void initialize_history(std::size_t number_of_states = 100);
 
 protected:
     double current_time_;
@@ -92,7 +79,7 @@ protected:
     double time_since_last_measure_;
     sset::RNGType &gen_;
     mutable std::uniform_real_distribution<double> random_01_;
-    std::function<double(std::size_t,std::size_t)> recovery_rate_;
+    double recovery_rate_;
     std::function<double(std::size_t,std::size_t)> infection_rate_;
 
 private:
@@ -102,10 +89,15 @@ private:
     std::vector<GroupState> group_state_vector_;
     std::vector<GroupStatePosition> group_state_position_vector_;
     std::unordered_set<Node> infected_node_set_;
-    sset::SamplableSet<Group> event_set_;
+    sset::SamplableSet<Event> event_set_;
     std::vector<std::unordered_set<Node>> history_vector_;
 
     //utility functions
+    inline double get_recovery_rate(Group group) const
+        {return recovery_rate_;}
+    inline double get_infection_rate(Group group) const
+        {return infection_rate_(network_.group_size(group),
+                group_state_vector_[group][I].size());}
     inline void update_group_rate(Group group, Node node,
             NodeState previous_state, NodeState new_state);
     inline void infect(Node node);
@@ -119,5 +111,5 @@ private:
 
 }//end of namespace schon
 
-#endif /* COMPLEXSIS_HPP_ */
+#endif /* GROUPSIS_HPP_ */
 

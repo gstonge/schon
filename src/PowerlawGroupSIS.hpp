@@ -25,30 +25,28 @@
 #ifndef POWERLAWSIS
 #define POWERLAWSIS
 
-#include "ComplexSIS.hpp"
+#include "GroupSIS.hpp"
 
 namespace schon
 {//start of namespace schon
 
 //class to simulate SIS process on networks
-class PowerlawSIS : public ComplexSIS
+class PowerlawGroupSIS : public GroupSIS
 {
 public:
     //Constructor
-    PowerlawSIS(const EdgeList& edge_list, double scale_recovery,
+    PowerlawGroupSIS(const EdgeList& edge_list, double recovery_rate,
             double scale_infection, double shape_infection,
-            const std::pair<double,double>& group_rate_bounds);
+            const std::pair<double,double>& rate_bounds);
 };
 
 //constructor definiton
-PowerlawSIS::PowerlawSIS(const EdgeList& edge_list, double scale_recovery,
+PowerlawGroupSIS::PowerlawGroupSIS(const EdgeList& edge_list, double recovery_rate,
             double scale_infection, double shape_infection,
-            const std::pair<double,double>& group_rate_bounds) : ComplexSIS(
-                edge_list, NULL, NULL, group_rate_bounds)
+            const std::pair<double,double>& rate_bounds) : GroupSIS(
+                edge_list, recovery_rate, NULL, rate_bounds)
 {
     //define the recovery/infection rates
-    recovery_rate_ = [=](std::size_t n,std::size_t i) -> double
-        {return scale_recovery*i;};
     infection_rate_ = [=](std::size_t n,std::size_t i) -> double
         {return scale_infection*(n-i)*pow(i,shape_infection);};
 }

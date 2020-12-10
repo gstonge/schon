@@ -1,4 +1,4 @@
-#include "PowerlawSIS.hpp"
+#include "PowerlawGroupSIS.hpp"
 #include <iostream>
 
 using namespace std;
@@ -9,7 +9,7 @@ int main(int argc, const char *argv[])
     //make one big group
     int n = 1000;
     double scale_rec = 1.;
-    double scale_inf = 0.001;
+    double scale_inf = 0.00101;
     double shape_inf = 1.;
     double fraction = 0.5;
     EdgeList edge_list;
@@ -18,7 +18,7 @@ int main(int argc, const char *argv[])
         edge_list.push_back(make_pair(j,0));
     }
     PowerlawSIS cont(edge_list,scale_rec,scale_inf,shape_inf,
-            make_pair(1.,scale_inf*(n*n/4)+n*scale_rec));
+            make_pair(scale_inf,scale_inf*(n*n/4)+n*scale_rec));
 
     //measure prevalence and marginal infection prob
     cont.measure_prevalence();
@@ -29,7 +29,7 @@ int main(int argc, const char *argv[])
     cont.initialize_history();
 
     //make it evolve for a time, then evolve and measure
-    double dt1 = 200.;
+    double dt1 = 100.;
     double dt2 = 20.;
     cont.evolve(dt1,0.5,false,true);
     cont.evolve(dt2,1.,true,true);
