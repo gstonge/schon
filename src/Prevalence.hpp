@@ -26,6 +26,7 @@
 #define PREVALENCE_HPP_
 
 #include "Measure.hpp"
+#include <vector>
 
 namespace schon
 {//start of namespace schon
@@ -37,7 +38,7 @@ public:
     Prevalence(std::size_t network_size);
 
     //Acessors
-    double get_result() const;
+    std::vector<double> get_result() const;
     const std::string& get_name() const
         {return name_;}
 
@@ -48,8 +49,7 @@ private:
     //Members
     const std::string name_;
     const std::size_t network_size_;
-    int count_;
-    double weight_;
+    std::vector<double> prevalence_vector_;
 };
 
 }//end of namespace schon

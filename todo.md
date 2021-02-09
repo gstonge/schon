@@ -1,5 +1,2 @@
-- Quasistationary process
-- merge evolve and evolve_and_measure in a single function
 - weighted groups
 - group prevalence measure
-- python wrapper

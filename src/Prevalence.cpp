@@ -30,23 +30,23 @@ namespace schon
 {//start of namespace schon
 
 //constructor
-Prevalence::Prevalence(size_t network_size): network_size_(network_size),
-    count_(0), name_("prevalence")
+Prevalence::Prevalence(size_t network_size): name_("prevalence"),
+    network_size_(network_size), prevalence_vector_()
 {
 }
 
 //return the prevalence
-double Prevalence::get_result() const
+std::vector<double> Prevalence::get_result() const
 {
-    return weight_/(count_*network_size_);
+    return prevalence_vector_;
 }
 
 //perform a measure on the contagion process
 void Prevalence::measure(
         ContagionProcess const * const ptr)
 {
-    weight_ += ptr->get_number_of_infected_nodes();
-    count_ += 1;
+    double I = (1.*ptr->get_number_of_infected_nodes())/network_size_;
+    prevalence_vector_.push_back(I);
 }
 
 }//end of namespace schon

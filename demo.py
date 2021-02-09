@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 from _schon import PowerlawGroupSIS
 
 #structure : all individuals belong to two groups
@@ -12,7 +13,7 @@ for node in range(N):
 recovery_rate = 1.
 scale_infection = 1.2*10**(-3)
 shape_infection = 1. #linear
-rate_bounds = (10**(-3),100)
+rate_bounds = (10**(-3),10000)
 initial_infected_fraction = 0.05
 seed = 42
 nb_history = 50
@@ -44,7 +45,7 @@ for measure in cont.get_measure_vector():
         print("----------------")
         print(name)
         print("----------------")
-        print(measure.get_result())
+        print(np.mean(measure.get_result()))
     elif name == "marginal_infection_probability":
         plt.hist(measure.get_result())
         plt.show()
