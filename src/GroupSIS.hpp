@@ -64,6 +64,7 @@ public:
     void seed(unsigned int seed)
         {gen_.seed(seed);}
     void infect_fraction(double fraction);
+    void infect_node_set(const std::unordered_set<Node>& node_set);
 
     void next_event();
     void evolve(double period, double decorrelation_time=1, bool measure=false,

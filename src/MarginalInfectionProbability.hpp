@@ -43,6 +43,8 @@ public:
 
     //Mutators
     void measure(ContagionProcess const * const ptr);
+    void clear()
+        {count_ = 0; weight_vector_ = std::vector<double>(network_size, 0.);}
 
 private:
     //Members

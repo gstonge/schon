@@ -151,6 +151,18 @@ void GroupSIS::infect_fraction(double fraction)
     }
 }
 
+//infect a certain set of of nodes
+void GroupSIS::infect_node_set(const std::unordered_set<Node>& node_set)
+{
+    for (Node node : node_set)
+    {
+        if (node_state_vector_[node] == S)
+        {
+            infect(node);
+        }
+    }
+}
+
 //get a random node of the particular state in the group
 inline Node GroupSIS::random_node(Group group, NodeState node_state) const
 {
@@ -245,13 +257,20 @@ void GroupSIS::evolve(double period, double decorrelation_time, bool measure,
 }
 
 //clear the state; as if all node became susceptible at this time
+//clear all measures as well
 void GroupSIS::clear()
 {
+    //recover nodes
     for (Node node : infected_node_set_)
     {
         recover(node);
     }
     event_set_.clear();
+    //clear measures
+    for(size_t i = 0; i < measure_vector_.size(); i++)
+    {
+        measure_vector_[i] -> clear();
+    }
 }
 
 //clear and reset the process to initial state at time 0 (and clear history)

@@ -44,6 +44,8 @@ public:
 
     //Mutators
     void measure(ContagionProcess const * const ptr);
+    void clear()
+        {prevalence_vector_.clear();}
 
 private:
     //Members

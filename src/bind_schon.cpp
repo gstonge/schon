@@ -85,6 +85,14 @@ PYBIND11_MODULE(_schon, m)
                fraction: Fraction to be infected.
             )pbdoc", py::arg("fraction"))
 
+        .def("infect_node_set", &GroupSIS::infect_fraction, R"pbdoc(
+            Infect the nodes in the node set.
+
+            Args:
+               node_set: Set of nodes to infect.
+            )pbdoc", py::arg("node_set"))
+
+
         .def("evolve", &GroupSIS::evolve,
                 R"pbdoc(
             Let the system evolve over a period of time.
