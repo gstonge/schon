@@ -85,7 +85,7 @@ PYBIND11_MODULE(_schon, m)
                fraction: Fraction to be infected.
             )pbdoc", py::arg("fraction"))
 
-        .def("infect_node_set", &GroupSIS::infect_fraction, R"pbdoc(
+        .def("infect_node_set", &GroupSIS::infect_node_set, R"pbdoc(
             Infect the nodes in the node set.
 
             Args:
