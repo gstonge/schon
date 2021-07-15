@@ -62,7 +62,8 @@ class get_pybind_include(object):
 ext_modules = [
     Extension(
         '_schon',
-        ['src/bind_schon.cpp','src/BipartiteNetwork.cpp', 'src/GroupSIS.cpp',
+        ['src/bind_schon.cpp','src/BipartiteNetwork.cpp',
+        'src/BaseContagion.cpp','src/GroupSIS.cpp', 'src/DiscreteSIS.cpp',
         'src/MarginalInfectionProbability.cpp', 'src/Prevalence.cpp',
         'src/SamplableSet/BinaryTree.cpp','src/SamplableSet/SamplableSet.cpp',
         'src/SamplableSet/HashPropensity.cpp'],
