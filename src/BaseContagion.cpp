@@ -102,7 +102,6 @@ void BaseContagion::infect_node_set(const std::unordered_set<Node>& node_set)
 
 
 //clear the state; as if all node became susceptible at this time
-//clear all measures as well
 void BaseContagion::clear()
 {
     //recover nodes
@@ -110,17 +109,18 @@ void BaseContagion::clear()
     {
         recover(node);
     }
+}
+
+//clear and reset the process to initial state at time 0 (and clear history)
+//clear all measures as well
+void BaseContagion::reset()
+{
+    clear();
     //clear measures
     for(size_t i = 0; i < measure_vector_.size(); i++)
     {
         measure_vector_[i] -> clear();
     }
-}
-
-//clear and reset the process to initial state at time 0 (and clear history)
-void BaseContagion::reset()
-{
-    clear();
     history_vector_.clear();
     current_time_ = 0;
     last_event_time_ = 0;

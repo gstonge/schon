@@ -27,6 +27,7 @@
 #include <PowerlawGroupSIS.hpp>
 #include <BaseContagion.hpp>
 #include <DiscreteSIS.hpp>
+#include <HeterogeneousExposure.hpp>
 #include <MarginalInfectionProbability.hpp>
 #include <Prevalence.hpp>
 
@@ -199,6 +200,31 @@ PYBIND11_MODULE(_schon, m)
                 py::arg("infection_probability"))
 
         .def("get_lifetime", &DiscreteSIS::get_lifetime, R"pbdoc(
+            Returns the lifetime for the current state.
+            )pbdoc");
+
+
+    py::class_<HeterogeneousExposure, BaseContagion>(m, "HeterogeneousExposure")
+
+        .def(py::init<EdgeList, double, double, double,
+                double, double>(), R"pbdoc(
+            Default constructor of the class GroupSIS.
+
+            Args:
+               edge_list: Edge list for the network structure.
+               recovery_probability: Double for the recovery probability
+               alpha:  Double for the exponent of the participation time distribution
+               T: Double for the temporal window
+               beta: Double for the rate of dose accumulation
+               K: Double for the dose threshold
+            )pbdoc", py::arg("edge_list"),
+                py::arg("recovery_probability"),
+                py::arg("alpha"),
+                py::arg("T"),
+                py::arg("beta"),
+                py::arg("K"))
+
+        .def("get_lifetime", &HeterogeneousExposure::get_lifetime, R"pbdoc(
             Returns the lifetime for the current state.
             )pbdoc");
 

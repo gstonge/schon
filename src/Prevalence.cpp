@@ -23,6 +23,7 @@
  */
 
 #include "Prevalence.hpp"
+#include <iostream>
 
 using namespace std;
 
@@ -36,7 +37,7 @@ Prevalence::Prevalence(size_t network_size): name_("prevalence"),
 }
 
 //return the prevalence
-std::vector<double> Prevalence::get_result() const
+vector<double> Prevalence::get_result() const
 {
     return prevalence_vector_;
 }
