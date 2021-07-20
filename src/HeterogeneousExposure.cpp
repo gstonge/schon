@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020 Guillaume St-Onge
+ * Copyright (c) 2021 Guillaume St-Onge
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,11 +22,13 @@
  * SOFTWARE.
  */
 
-#include "GroupSIS.hpp"
+#include "HeterogeneousExposure.hpp"
 #include <optional>
 #include <utility>
 #include <iostream>
 #include <exception>
+#include <cmath>
+#include <limits>
 
 using namespace std;
 
@@ -34,48 +36,40 @@ namespace schon
 {//start of namespace schon
 
 //constructor of the class
-GroupSIS::GroupSIS(const EdgeList& edge_list, double recovery_rate,
-        const function<double(size_t,size_t)>& infection_rate,
-        const pair<double,double>& rate_bounds):
+HeterogeneousExposure::HeterogeneousExposure(const EdgeList& edge_list, double recovery_probability,
+        double alpha, double T, double beta, double K):
     BaseContagion(edge_list),
-    recovery_rate_(recovery_rate), infection_rate_(infection_rate),
-    event_set_(rate_bounds.first,rate_bounds.second)
+    recovery_probability_(recovery_probability),
+    recovery_propensity_(-log(1-recovery_probability)),
+    recovery_event_set_(1.,1.),
+    poisson_dist_(1.),
+    alpha_(alpha),
+    T_(T),
+    beta_(beta),
+    K_(K)
 {
 }
 
-//update the event group rate
-inline void GroupSIS::update_group_rate(Group group, Node node,
+//update the group state
+inline void HeterogeneousExposure::update_group_state(Group group, Node node,
         NodeState previous_state, NodeState new_state)
 {
     GroupState & group_state = group_state_vector_[group];
     size_t position = group_state_position_vector_[group][node];
-    if (position < group_state[previous_state].size())
-    {
-        //node not in the back, put node in the back position
-        swap(group_state[previous_state][position],
-                group_state[previous_state].back());
-        //also update the position of the node in the back
-        Node back_node = group_state[previous_state][position];
-        group_state_position_vector_[group][back_node] = position;
-    }
+    //if node not in the back, put node in the back position
+    swap(group_state[previous_state][position],
+            group_state[previous_state].back());
+    //also update the position of the node in the back
+    Node back_node = group_state[previous_state][position];
+    group_state_position_vector_[group][back_node] = position;
     //put node in new group state
     group_state[previous_state].pop_back();
     group_state_position_vector_[group][node] = group_state[new_state].size();
     group_state[new_state].push_back(node);
-    //update event set with new rate
-    double new_rate = get_infection_rate(group);
-    if (new_rate > 0)
-    {
-        event_set_.set_weight(make_tuple(GROUP,INFECTION,group),new_rate);
-    }
-    else
-    {
-        event_set_.erase(make_tuple(GROUP,INFECTION,group));
-    }
 }
 
 //infect a node
-inline void GroupSIS::infect(Node node)
+inline void HeterogeneousExposure::infect(Node node)
 {
     if (node_state_vector_[node] == S)
     {
@@ -83,10 +77,10 @@ inline void GroupSIS::infect(Node node)
         infected_node_set_.insert(node);
         for (Group group : network_.adjacent_groups(node))
         {
-            update_group_rate(group,node,S,I);
+            update_group_state(group,node,S,I);
         }
         //create a recovery event for the node
-        event_set_.insert(make_tuple(NODE,RECOVERY,node), recovery_rate_);
+        recovery_event_set_.insert(node, 1.);
     }
     else
     {
@@ -95,7 +89,7 @@ inline void GroupSIS::infect(Node node)
 }
 
 //recover a node
-inline void GroupSIS::recover(Node node)
+inline void HeterogeneousExposure::recover(Node node)
 {
     if (node_state_vector_[node] == I)
     {
@@ -103,10 +97,10 @@ inline void GroupSIS::recover(Node node)
         infected_node_set_.erase(node);
         for (Group group : network_.adjacent_groups(node))
         {
-            update_group_rate(group,node,I,S);
+            update_group_state(group,node,I,S);
         }
         //erase the recovery event for the node
-        event_set_.erase(make_tuple(NODE,RECOVERY,node));
+        recovery_event_set_.erase(node);
     }
     else
     {
@@ -116,42 +110,62 @@ inline void GroupSIS::recover(Node node)
 
 
 //advance the process to the next step by performing infection/recovery
-//it is assumed that the lifetime is finite
-inline void GroupSIS::next_event()
+inline void HeterogeneousExposure::next_event()
 {
     current_time_ = last_event_time_ + get_lifetime();
-    //select a group proportionally to its weight
-    pair<Event, double> event_weight_pair = (event_set_.sample()).value();
-    const Event& event = event_weight_pair.first;
-    if (get<0>(event) == NODE and get<1>(event) == RECOVERY)
+    //get the number of recoveries and assign them
+    poisson_dist_ = poisson_distribution<int>(
+            recovery_propensity_*recovery_event_set_.size());
+    int nb_rec = poisson_dist_(gen_);
+    unordered_set<Node> new_susceptible; //use a set to discard repetition
+    for (int i = 0; i < nb_rec; i++)
     {
-        //node-based recovery event
-        Node node = get<2>(event);
+        pair<Node,double> node_weight_pair =
+            (recovery_event_set_.sample()).value();
+        new_susceptible.insert(node_weight_pair.first);
+    }
+    //get the infections
+    double tau, kappa, rho;
+    double n,i;
+    unordered_set<Node> new_infected;
+    for (Group group = 0; group < network_.number_of_groups(); group++)
+    {
+        GroupState & group_state = group_state_vector_[group];
+        n = network_.group_size(group);
+        i = group_state[I].size();
+        rho = i/(n-1);
+        //for all susceptible, check for infections
+        for (Node node : group_state[S])
+        {
+            tau = get_participation_time();
+            kappa = get_dose(tau,rho);
+            if (kappa > K_)
+            {
+                new_infected.insert(node);
+            }
+        }
+    }
+
+    //perform recovery and infections
+    for (Node node : new_susceptible)
+    {
         recover(node);
     }
-    else if (get<0>(event) == GROUP and get<1>(event) == INFECTION)
+    for (Node node : new_infected)
     {
-        //Groub-based infection event
-        Group group = get<2>(event);
-        Node node = random_node(group, S);
         infect(node);
-    }
-    else
-    {
-        throw runtime_error("Unallowed type of event");
     }
     last_event_time_ = current_time_;
 }
 
 
-
 //clear the state; as if all node became susceptible at this time
 //clear all measures as well
 //overload BaseContagion
-void GroupSIS::clear()
+void HeterogeneousExposure::clear()
 {
     BaseContagion::clear();
-    event_set_.clear(); //to avoid numerical error accumulation
+    recovery_event_set_.clear(); //to avoid numerical error accumulation
 }
 
 

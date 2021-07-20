@@ -61,6 +61,13 @@ public:
             ) const = 0;
     virtual const BipartiteNetwork& get_network() const = 0;
     virtual double get_lifetime() const = 0;
+
+
+protected:
+    //utility functions
+    virtual void infect(Node node) = 0;
+    virtual void recover(Node node) = 0;
+    virtual void next_event() = 0;
 };
 
 }//end of namespace schon
