@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from _schon import ContinuousSIS
+from _schon import PowerlawGroupSIS
 
 #structure : all individuals belong to two groups
 N = 500
@@ -11,17 +11,15 @@ for node in range(N):
 
 #infection parameter
 recovery_rate = 1.
-group_transmission_rate = [0.5*10**(-3),1.2*10**(-3)]
-infection_rate = np.zeros((N+1,N+1))
-for n in range(2,N+1):
-    for i in range(n+1):
-        infection_rate[n][i] = i
+scale_infection = 1.2*10**(-3)
+shape_infection = 1. #linear
+rate_bounds = (10**(-3),10000)
 initial_infected_fraction = 0.05
 seed = 42
 nb_history = 50
 
-cont = ContinuousSIS(edge_list,recovery_rate,infection_rate,
-                        group_transmission_rate)
+cont = PowerlawGroupSIS(edge_list,recovery_rate,scale_infection,
+                        shape_infection,rate_bounds)
 cont.infect_fraction(initial_infected_fraction)
 # cont.seed(seed) #optional
 cont.initialize_history(nb_history)

@@ -64,7 +64,7 @@ ext_modules = [
         '_schon',
         ['src/bind_schon.cpp','src/BipartiteNetwork.cpp',
         'src/BaseContagion.cpp','src/GroupSIS.cpp', 'src/DiscreteSIS.cpp',
-        'src/HeterogeneousExposure.cpp',
+        'src/HeterogeneousExposure.cpp', 'src/ContinuousSIS.cpp',
         'src/MarginalInfectionProbability.cpp', 'src/Prevalence.cpp',
         'src/SamplableSet/BinaryTree.cpp','src/SamplableSet/SamplableSet.cpp',
         'src/SamplableSet/HashPropensity.cpp'],

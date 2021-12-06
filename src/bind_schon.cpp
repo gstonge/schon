@@ -26,6 +26,7 @@
 #include <pybind11/stl.h>
 #include <PowerlawGroupSIS.hpp>
 #include <BaseContagion.hpp>
+#include <ContinuousSIS.hpp>
 #include <DiscreteSIS.hpp>
 #include <HeterogeneousExposure.hpp>
 #include <MarginalInfectionProbability.hpp>
@@ -164,6 +165,28 @@ PYBIND11_MODULE(_schon, m)
         .def("get_lifetime", &GroupSIS::get_lifetime, R"pbdoc(
             Returns the lifetime for the current state.
             )pbdoc");
+
+    py::class_<ContinuousSIS, BaseContagion>(m, "ContinuousSIS")
+
+        .def(py::init<EdgeList&, double,
+                const vector<vector<double>>&,
+                const vector<double>&>(), R"pbdoc(
+            Default constructor of the class ContinuousSIS.
+
+            Args:
+               edge_list: Edge list for the network structure.
+               recovery_rate: Double for the recovery rate
+               infection_rate: Matrix of infection rate per node in groups
+               group_transmission_rate: Vector of transmission rate per group
+            )pbdoc", py::arg("edge_list"),
+                py::arg("recovery_rate"),
+                py::arg("infection_rate"),
+                py::arg("group_transmission_rate"))
+
+        .def("get_lifetime", &ContinuousSIS::get_lifetime, R"pbdoc(
+            Returns the lifetime for the current state.
+            )pbdoc");
+
 
     py::class_<PowerlawGroupSIS, GroupSIS>(m, "PowerlawGroupSIS")
 
