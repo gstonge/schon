@@ -46,8 +46,8 @@ import setuptools
 __version__ = '0.0.1'
 
 ext_modules = [
-    Pybind11Extension("_pgfgleamcpp",
-        sorted(glob("src/[!_]*.cpp")),  # Sort source files for reproducibility
+    Pybind11Extension("_schon",
+        sorted(glob("src/[!_]*.cpp")) + sorted(glob("src/SamplableSet/*.cpp")),  # Sort source files for reproducibility
         include_dirs = ["src/"],
         define_macros = [('VERSION_INFO', __version__)],
         ),
