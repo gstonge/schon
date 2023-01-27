@@ -140,6 +140,20 @@ PYBIND11_MODULE(_schon, m)
             R"pbdoc(
             Add the measure of prevalence to the vector
             of measures to be performed during simulations.
+            )pbdoc")
+
+        .def("measure_infectious_set",
+        &MeasurableContagionProcess::measure_infectious_set,
+            R"pbdoc(
+            Add the measure of infectious set to the vector
+            of measures to be performed during simulations.
+            )pbdoc")
+
+        .def("measure_time",
+        &MeasurableContagionProcess::measure_time,
+            R"pbdoc(
+            Add the measure of time to the vector
+            of measures to be performed during simulations.
             )pbdoc");
 
 
