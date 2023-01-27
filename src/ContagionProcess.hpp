@@ -36,7 +36,7 @@
 namespace schon
 {//start of namespace schon
 
-enum NodeState {S, I, COUNT};
+enum NodeState {S, I, R, COUNT};
 const unsigned int STATECOUNT = static_cast<unsigned int>(NodeState::COUNT);
 enum Action {RECOVERY,INFECTION};
 enum Actor {GROUP,NODE};
