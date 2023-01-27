@@ -61,6 +61,8 @@ public:
             ) const = 0;
     virtual const BipartiteNetwork& get_network() const = 0;
     virtual double get_lifetime() const = 0;
+    virtual double get_current_time() const = 0;
+
 
 
 protected:

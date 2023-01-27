@@ -22,54 +22,37 @@
  * SOFTWARE.
  */
 
-#ifndef MEASURABLECONTAGIONPROCESS_HPP_
-#define MEASURABLECONTAGIONPROCESS_HPP_
+#ifndef TIME_HPP_
+#define TIME_HPP_
 
-#include <memory>
-#include "ContagionProcess.hpp"
 #include "Measure.hpp"
-#include "MarginalInfectionProbability.hpp"
-#include "Prevalence.hpp"
-#include "InfectiousSet.hpp"
-#include "Time.hpp"
+#include <vector>
 
 namespace schon
 {//start of namespace schon
 
-//abstract class that allow measurement
-class MeasurableContagionProcess : public ContagionProcess
+class Time : public Measure
 {
 public:
     //Constructor
-    MeasurableContagionProcess(): measure_vector_() {};
+    Time();
 
-    //Accessors
-    const std::vector<std::shared_ptr<Measure>>& get_measure_vector() const
-        {return measure_vector_;}
-
+    //Acessors
+    std::vector<double> get_result() const;
+    const std::string& get_name() const
+        {return name_;}
 
     //Mutators
-    void measure_marginal_infection_probability()
-        {add_measure(std::make_shared<MarginalInfectionProbability>(
-                    get_network().size()));}
+    void measure(ContagionProcess const * const ptr);
+    void clear()
+        {time_vector_.clear();}
 
-    void measure_prevalence()
-        {add_measure(std::make_shared<Prevalence>(
-                    get_network().size()));}
-
-    void measure_infectious_set()
-        {add_measure(std::make_shared<InfectiousSet>());}
-
-    void measure_time()
-        {add_measure(std::make_shared<Time>());}
-
-protected:
-    void add_measure(std::shared_ptr<Measure> ptr)
-        {measure_vector_.push_back(ptr);}
+private:
     //Members
-    std::vector<std::shared_ptr<Measure>> measure_vector_;
+    const std::string name_;
+    std::vector<double> time_vector_;
 };
 
 }//end of namespace schon
 
-#endif /* MEASURABLECONTAGIONPROCESS_HPP_ */
+#endif /* TIME_HPP_ */

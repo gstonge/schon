@@ -31,6 +31,8 @@
 #include <HeterogeneousExposure.hpp>
 #include <MarginalInfectionProbability.hpp>
 #include <Prevalence.hpp>
+#include <InfectiousSet.hpp>
+#include <Time.hpp>
 
 using namespace std;
 using namespace schon;
@@ -137,6 +139,20 @@ PYBIND11_MODULE(_schon, m)
         &MeasurableContagionProcess::measure_prevalence,
             R"pbdoc(
             Add the measure of prevalence to the vector
+            of measures to be performed during simulations.
+            )pbdoc")
+
+        .def("measure_infectious_set",
+        &MeasurableContagionProcess::measure_infectious_set,
+            R"pbdoc(
+            Add the measure of infectious set to the vector
+            of measures to be performed during simulations.
+            )pbdoc")
+
+        .def("measure_time",
+        &MeasurableContagionProcess::measure_time,
+            R"pbdoc(
+            Add the measure of time to the vector
             of measures to be performed during simulations.
             )pbdoc");
 
@@ -293,4 +309,37 @@ PYBIND11_MODULE(_schon, m)
         .def("get_result", &Prevalence::get_result, R"pbdoc(
             Returns the result associated to the measure.
             )pbdoc");
+
+    py::class_<InfectiousSet,shared_ptr<InfectiousSet>>(m,
+                "InfectiousSet")
+
+        .def(py::init<>(), R"pbdoc(
+            Default constructor of the class InfectiousSet.
+
+            )pbdoc")
+
+        .def("get_name", &InfectiousSet::get_name, R"pbdoc(
+            Returns the name of the measure.
+            )pbdoc")
+
+        .def("get_result", &InfectiousSet::get_result, R"pbdoc(
+            Returns the result associated to the measure.
+            )pbdoc");
+
+    py::class_<Time,shared_ptr<Time>>(m,
+                "Time")
+
+        .def(py::init<>(), R"pbdoc(
+            Default constructor of the class Time.
+
+            )pbdoc")
+
+        .def("get_name", &Time::get_name, R"pbdoc(
+            Returns the name of the measure.
+            )pbdoc")
+
+        .def("get_result", &Time::get_result, R"pbdoc(
+            Returns the result associated to the measure.
+            )pbdoc");
+
 }
